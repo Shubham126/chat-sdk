@@ -1,0 +1,50 @@
+{
+  "name": "@chatflow/sdk",
+  "version": "1.0.0",
+  "description": "ChatFlow AI SDK - Easy integration chatbot for websites",
+  "main": "dist/chatbot-sdk.js",
+  "module": "dist/chatbot-sdk.esm.js",
+  "browser": "dist/chatbot-sdk.min.js",
+  "files": [
+    "dist/",
+    "src/",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c -w",
+    "dev": "rollup -c -w",
+    "serve": "npx http-server demo -p 8080 -c-1",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chatbot",
+    "ai",
+    "sdk",
+    "javascript",
+    "widget",
+    "customer-support"
+  ],
+  "author": "ChatFlow AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chatflow-ai/sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chatflow-ai/sdk/issues"
+  },
+  "homepage": "https://github.com/chatflow-ai/sdk#readme",
+  "dependencies": {
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@rollup/plugin-babel": "^6.0.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
+    "core-js": "^3.48.0",
+    "postcss": "^8.4.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-postcss": "^4.0.0"
+  }
+}
