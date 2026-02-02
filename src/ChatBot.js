@@ -2,14 +2,14 @@ class ChatBot {
     constructor(apiKey, options = {}) {
         this.apiKey = apiKey;
         // Auto-detect environment for baseUrl
-        const isLocalhost = window.location.hostname === 'localhost' || 
-                           window.location.hostname === '127.0.0.1' || 
-                           window.location.hostname.includes('127.0.0.1');
-        
-        const defaultBaseUrl = isLocalhost ? 
-            'http://localhost:3000/api/scrape' : 
-            'https://chatflow-ai.onrender.com/api/scrape';
-            
+        const isLocalhost = window.location.hostname === 'localhost' ||
+            window.location.hostname === '127.0.0.1' ||
+            window.location.hostname.includes('127.0.0.1');
+
+        const defaultBaseUrl = isLocalhost ?
+            'http://localhost:3000/api/scrape' :
+            'https://chat-backend-12wo.onrender.com/api/scrape';
+
         this.baseUrl = options.baseUrl || defaultBaseUrl;
         this.isOpen = false;
         this.currentFileId = null;
@@ -17,7 +17,7 @@ class ChatBot {
         this.selectedFileId = null;
         this.selectedSiteName = null;
         this.websiteTheme = null;
-        
+
         // Configuration options - will be loaded from API
         this.options = {
             position: 'bottom-right', // Default, will be overridden by API
@@ -28,19 +28,19 @@ class ChatBot {
             preselectedSite: null,
             ...options
         };
-        
+
         this.init();
-        
+
         // Set up periodic refresh to check for configuration changes
         this.setupConfigRefresh();
-        
+
         // Add global method for manual refresh
         window.ChatFlowRefresh = () => {
             console.log('🔄 Manual refresh triggered');
             this.refreshConfiguration();
         };
     }
-    
+
     setupConfigRefresh() {
         // Check for configuration updates every 2 seconds for faster response
         this.configRefreshInterval = setInterval(async () => {
@@ -50,7 +50,7 @@ class ChatBot {
                 console.warn('Config refresh failed:', error);
             }
         }, 2000);
-        
+
         // Also refresh when page becomes visible (user switches back to tab)
         document.addEventListener('visibilitychange', () => {
             if (!document.hidden) {
@@ -58,14 +58,14 @@ class ChatBot {
                 this.refreshConfiguration();
             }
         });
-        
+
         // Refresh when window gains focus
         window.addEventListener('focus', () => {
             console.log('🔄 Window focused, checking for config updates...');
             this.refreshConfiguration();
         });
     }
-    
+
     async refreshConfiguration() {
         try {
             const timestamp = new Date().getTime();
@@ -76,19 +76,19 @@ class ChatBot {
                     'x-api-key': this.apiKey
                 }
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success && data.data) {
                 const newConfig = data.data;
-                
+
                 // Check if configuration has changed
                 const configChanged = this.hasConfigurationChanged(newConfig);
-                
+
                 if (configChanged) {
                     console.log('⚡ Configuration changed, updating chatbot immediately...');
                     await this.applyNewConfiguration(newConfig);
-                    
+
                     // Show brief notification to user
                     this.showUpdateNotification();
                 }
@@ -98,50 +98,50 @@ class ChatBot {
             console.debug('Config refresh error:', error);
         }
     }
-    
+
     hasConfigurationChanged(newConfig) {
         if (!this.sdkConfig) return true;
-        
+
         // Check if selected website changed
         const oldWebsiteId = this.sdkConfig.selectedWebsite?.id;
         const newWebsiteId = newConfig.selectedWebsite?.id;
-        
+
         if (oldWebsiteId !== newWebsiteId) {
             console.log('📝 Selected website changed:', oldWebsiteId, '->', newWebsiteId);
             return true;
         }
-        
+
         // Check if theme choice changed
         const oldThemeChoice = this.sdkConfig.integration?.themeChoice;
         const newThemeChoice = newConfig.integration?.themeChoice;
-        
+
         if (oldThemeChoice !== newThemeChoice) {
             console.log('🎨 Theme choice changed:', oldThemeChoice, '->', newThemeChoice);
             return true;
         }
-        
+
         // Check if theme data changed (for website themes)
         if (newThemeChoice === 'website') {
             const oldThemeData = JSON.stringify(this.sdkConfig.themeData || {});
             const newThemeData = JSON.stringify(newConfig.themeData || {});
-            
+
             if (oldThemeData !== newThemeData) {
                 console.log('🎨 Theme data changed');
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     async applyNewConfiguration(newConfig) {
         // Store new configuration
         this.sdkConfig = newConfig;
-        
+
         // Update all settings from new configuration
         if (newConfig.integration.customizations) {
             const customizations = newConfig.integration.customizations;
-            
+
             // Update position if changed
             if (customizations.position && customizations.position !== this.options.position) {
                 this.options.position = customizations.position;
@@ -149,7 +149,7 @@ class ChatBot {
                 this.widget.className = `chatbot-widget ${this.options.position}`;
                 console.log('📍 Position updated to:', this.options.position);
             }
-            
+
             // Update title if changed
             if (customizations.title && customizations.title !== this.options.title) {
                 this.options.title = customizations.title;
@@ -159,7 +159,7 @@ class ChatBot {
                 }
                 console.log('📝 Title updated to:', this.options.title);
             }
-            
+
             // Update placeholder if changed
             if (customizations.placeholder && customizations.placeholder !== this.options.placeholder) {
                 this.options.placeholder = customizations.placeholder;
@@ -170,7 +170,7 @@ class ChatBot {
                 console.log('💬 Placeholder updated to:', this.options.placeholder);
             }
         }
-        
+
         // Update theme settings
         if (newConfig.integration.themeChoice === 'website' && newConfig.themeData) {
             this.options.themeStyle = 'website';
@@ -179,14 +179,14 @@ class ChatBot {
             this.options.themeStyle = 'default';
             this.websiteTheme = null;
         }
-        
+
         // Update selected website
         if (newConfig.selectedWebsite) {
             this.currentFileId = newConfig.selectedWebsite.id;
             this.enableInput();
             this.clearChat();
             this.updateChatHeader(
-                newConfig.selectedWebsite.displayName || newConfig.selectedWebsite.fileName, 
+                newConfig.selectedWebsite.displayName || newConfig.selectedWebsite.fileName,
                 newConfig.selectedWebsite.url
             );
         } else if (newConfig.availableWebsites.length > 0) {
@@ -198,22 +198,22 @@ class ChatBot {
         } else {
             this.showNoSitesMessage();
         }
-        
+
         // Re-apply styles with new theme
         this.createStyles();
-        
+
         console.log('✅ Configuration updated successfully');
     }
-    
+
     showUpdateNotification() {
         // Notification removed - silent updates
     }
-    
+
     async init() {
         this.createStyles();
         this.createChatWidget();
         this.bindEvents();
-        
+
         // Validate API key and load SDK configuration
         const isValidKey = await this.validateApiKey();
         if (isValidKey) {
@@ -223,7 +223,7 @@ class ChatBot {
             this.showApiKeyError();
         }
     }
-    
+
     async validateApiKey() {
         try {
             const response = await fetch(`${this.baseUrl.replace('/scrape', '')}/auth/validate-api-key`, {
@@ -233,7 +233,7 @@ class ChatBot {
                     'x-api-key': this.apiKey
                 }
             });
-            
+
             const data = await response.json();
             return data.success;
         } catch (error) {
@@ -241,7 +241,7 @@ class ChatBot {
             return false;
         }
     }
-    
+
     showApiKeyError() {
         const messages = this.widget.querySelector('#chatbot-messages');
         messages.innerHTML = `
@@ -250,24 +250,24 @@ class ChatBot {
                 The provided API key is invalid or has been revoked. Please check your integration settings and ensure you're using a valid API key.
             </div>
         `;
-        
+
         // Disable input
         const input = this.widget.querySelector('#chatbot-input');
         const send = this.widget.querySelector('#chatbot-send');
         input.disabled = true;
         send.disabled = true;
         input.placeholder = 'Invalid API key - chatbot disabled';
-        
+
         // Hide site selector
         const selector = this.widget.querySelector('#chatbot-site-selector');
         selector.style.display = 'none';
     }
-    
+
     createStyles() {
         // Create CSS custom properties for theming
         const themeColors = this.getThemeColors();
         console.log('🎨 Creating styles with theme colors:', themeColors);
-        
+
         const styles = `
             :root {
                 --chatbot-primary: ${themeColors.primary};
@@ -620,27 +620,27 @@ class ChatBot {
                 font-weight: 400;
             }
         `;
-        
+
         // Remove existing chatbot styles
         const existingStyles = document.getElementById('chatbot-styles');
         if (existingStyles) {
             existingStyles.remove();
         }
-        
+
         const styleSheet = document.createElement('style');
         styleSheet.id = 'chatbot-styles';
         styleSheet.textContent = styles;
         document.head.appendChild(styleSheet);
-        
+
         console.log('✅ Styles applied successfully');
     }
-    
+
     updateStyles() {
         // Update styles with current theme
         console.log('🔄 Updating styles with new theme...');
         this.createStyles();
     }
-    
+
     createChatWidget() {
         const widget = document.createElement('div');
         widget.className = `chatbot-widget ${this.options.position}`;
@@ -684,23 +684,23 @@ class ChatBot {
                 </div>
             </div>
         `;
-        
+
         document.body.appendChild(widget);
         this.widget = widget;
     }
-    
+
     bindEvents() {
         const toggle = this.widget.querySelector('#chatbot-toggle');
         const close = this.widget.querySelector('#chatbot-close');
         const input = this.widget.querySelector('#chatbot-input');
         const send = this.widget.querySelector('#chatbot-send');
-        
+
         toggle.addEventListener('click', () => this.toggleChat());
         close.addEventListener('click', () => this.closeChat());
         send.addEventListener('click', () => this.sendMessage());
-        
+
         // Remove auto-resize - keep fixed height with scroll
-        
+
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -708,48 +708,48 @@ class ChatBot {
             }
         });
     }
-    
+
     toggleChat() {
         this.isOpen = !this.isOpen;
         const container = this.widget.querySelector('#chatbot-container');
         container.classList.toggle('open', this.isOpen);
     }
-    
+
     closeChat() {
         this.isOpen = false;
         const container = this.widget.querySelector('#chatbot-container');
         container.classList.remove('open');
     }
-    
 
-    
 
-    
+
+
+
     enableInput() {
         const input = this.widget.querySelector('#chatbot-input');
         const send = this.widget.querySelector('#chatbot-send');
-        
+
         input.disabled = false;
         send.disabled = false;
         input.placeholder = this.options.placeholder || 'Ask me anything about this website...';
         input.focus();
     }
-    
+
     async sendMessage() {
         const input = this.widget.querySelector('#chatbot-input');
         const message = input.value.trim();
-        
+
         if (!message || !this.currentFileId) return;
-        
+
         // Add user message to chat
         this.addMessage(message, 'user');
         input.value = '';
-        
+
         // Keep fixed height - no resizing
-        
+
         // Show loading
         this.showLoading();
-        
+
         try {
             const response = await fetch(`${this.baseUrl}/chat`, {
                 method: 'POST',
@@ -762,11 +762,11 @@ class ChatBot {
                     message: message
                 })
             });
-            
+
             const data = await response.json();
-            
+
             this.hideLoading();
-            
+
             if (data.success) {
                 this.addMessage(data.data.response, 'bot');
             } else {
@@ -778,12 +778,12 @@ class ChatBot {
             this.addMessage('Sorry, I encountered an error. Please try again.', 'bot');
         }
     }
-    
+
     addMessage(text, sender) {
         const messages = this.widget.querySelector('#chatbot-messages');
         const message = document.createElement('div');
         message.className = `chatbot-message ${sender}`;
-        
+
         if (sender === 'bot') {
             // Format bot messages with better styling
             message.innerHTML = this.formatBotMessage(text);
@@ -791,13 +791,13 @@ class ChatBot {
             // User messages remain as plain text
             message.textContent = text;
         }
-        
+
         messages.appendChild(message);
         messages.scrollTop = messages.scrollHeight;
-        
+
         this.chatHistory.push({ text, sender, timestamp: new Date() });
     }
-    
+
     formatBotMessage(text) {
         // Clean up the text and format it properly
         let formattedText = text
@@ -814,11 +814,11 @@ class ChatBot {
             .replace(/^(\d+)\. (.+)$/gm, '<div class="bot-numbered">$1. $2</div>')
             // Convert line breaks to proper spacing
             .replace(/\n/g, '<br>');
-            
+
         // Wrap in a container for better styling
         return `<div class="bot-message-content">${formattedText}</div>`;
     }
-    
+
     showLoading() {
         const messages = this.widget.querySelector('#chatbot-messages');
         const loading = document.createElement('div');
@@ -836,18 +836,18 @@ class ChatBot {
                 </div>
             </div>
         `;
-        
+
         messages.appendChild(loading);
         messages.scrollTop = messages.scrollHeight;
     }
-    
+
     hideLoading() {
         const loading = this.widget.querySelector('#chatbot-loading');
         if (loading) {
             loading.remove();
         }
     }
-    
+
     async loadScrapedSites() {
         try {
             const response = await fetch(`${this.baseUrl.replace('/scrape', '')}/scrape/files`, {
@@ -857,40 +857,40 @@ class ChatBot {
                     'x-api-key': this.apiKey
                 }
             });
-            
+
             const data = await response.json();
-            
+
             if (data.success && data.data.length > 0) {
                 // Store all available sites
                 this.availableSites = data.data;
-                
+
                 let selectedSite = null;
-                
+
                 // Check if a preselected site is specified
                 if (this.options.preselectedSite) {
                     // Try to find the site by URL first
-                    selectedSite = data.data.find(site => 
-                        site.url === this.options.preselectedSite || 
+                    selectedSite = data.data.find(site =>
+                        site.url === this.options.preselectedSite ||
                         site.id === this.options.preselectedSite ||
                         site.fileName.includes(this.options.preselectedSite)
                     );
-                    
+
                     if (selectedSite) {
                         console.log('Found preselected site:', selectedSite.displayName || selectedSite.fileName);
                     } else {
                         console.warn('Preselected site not found:', this.options.preselectedSite);
                     }
                 }
-                
+
                 // If no preselected site found, use the first available site
                 if (!selectedSite) {
                     selectedSite = data.data[0];
                     console.log('Using first available site:', selectedSite.displayName || selectedSite.fileName);
                 }
-                
+
                 // Select the determined site
                 await this.selectSite(selectedSite.id, selectedSite.displayName || selectedSite.fileName, selectedSite.url);
-                
+
             } else {
                 // No sites available - show error message
                 this.showNoSitesMessage();
@@ -900,7 +900,7 @@ class ChatBot {
             this.showNoSitesMessage();
         }
     }
-    
+
     showNoSitesMessage() {
         // Display simple error message in chat area
         const messagesContainer = this.widget.querySelector('#chatbot-messages');
@@ -912,7 +912,7 @@ class ChatBot {
                 </div>
             </div>
         `;
-        
+
         // Disable chat input
         const input = this.widget.querySelector('#chatbot-input');
         const sendButton = this.widget.querySelector('#chatbot-send');
@@ -924,27 +924,27 @@ class ChatBot {
             sendButton.disabled = true;
         }
     }
-    
 
-    
+
+
     async selectSite(fileId, siteName, siteUrl) {
         // Directly apply site selection without any UI interactions
         console.log('🎯 Selecting site:', siteName, 'with fileId:', fileId);
         this.currentFileId = fileId;
         this.enableInput();
-        
+
         // Clear chat history when switching sites
         this.clearChat();
-        
+
         // Update header to show selected site
         this.updateChatHeader(siteName, siteUrl);
-        
+
         // Auto-detect and load theme
         console.log('🔄 Starting theme auto-detection...');
         await this.autoDetectAndLoadTheme(fileId);
         console.log('✅ Theme auto-detection completed');
     }
-    
+
     updateChatHeader(siteName, siteUrl) {
         // Update the website info section to show which site is being used
         const websiteLink = this.widget.querySelector('#website-link');
@@ -953,13 +953,13 @@ class ChatBot {
             websiteLink.href = siteUrl || '#';
         }
     }
-    
+
     clearChat() {
         const messages = this.widget.querySelector('#chatbot-messages');
-        const welcomeMessage = this.currentFileId ? 
+        const welcomeMessage = this.currentFileId ?
             "Hi! I'm ready to answer questions about the selected website. How can I help you?" :
             "Hi! I'm your AI assistant. Please select a website from the dropdown above to start chatting about its content.";
-        
+
         messages.innerHTML = `
             <div class="chatbot-message bot">
                 ${welcomeMessage}
@@ -967,24 +967,24 @@ class ChatBot {
         `;
         this.chatHistory = [];
     }
-    
+
     // Public API methods
     open() {
         this.isOpen = true;
         const container = this.widget.querySelector('#chatbot-container');
         container.classList.add('open');
     }
-    
+
     close() {
         this.closeChat();
     }
-    
+
     destroy() {
         // Clear refresh interval
         if (this.configRefreshInterval) {
             clearInterval(this.configRefreshInterval);
         }
-        
+
         if (this.widget) {
             this.widget.remove();
         }
@@ -994,7 +994,7 @@ class ChatBot {
     async loadSdkConfiguration() {
         try {
             console.log('🔧 Loading SDK configuration from API...');
-            
+
             // Add cache-busting timestamp to ensure fresh data
             const timestamp = new Date().getTime();
             const response = await fetch(`${this.baseUrl}/sdk-config?t=${timestamp}`, {
@@ -1010,31 +1010,31 @@ class ChatBot {
 
             if (data.success && data.data) {
                 const config = data.data;
-                
+
                 // Store configuration
                 this.sdkConfig = config;
-                
+
                 // Apply all settings from API configuration
                 console.log('🔧 Applying configuration from API...');
-                
+
                 // Set position from API integration settings
                 if (config.integration.customizations && config.integration.customizations.position) {
                     this.options.position = config.integration.customizations.position;
                     console.log('📍 Position set from API:', this.options.position);
                 }
-                
+
                 // Set title from API integration settings
                 if (config.integration.customizations && config.integration.customizations.title) {
                     this.options.title = config.integration.customizations.title;
                     console.log('📝 Title set from API:', this.options.title);
                 }
-                
+
                 // Set placeholder from API integration settings
                 if (config.integration.customizations && config.integration.customizations.placeholder) {
                     this.options.placeholder = config.integration.customizations.placeholder;
                     console.log('💬 Placeholder set from API:', this.options.placeholder);
                 }
-                
+
                 // Set theme based on API configuration
                 if (config.integration.themeChoice === 'website' && config.themeData) {
                     console.log('✅ Using website theme from API');
@@ -1044,7 +1044,7 @@ class ChatBot {
                     console.log('🎨 Using default theme from API');
                     this.options.themeStyle = 'default';
                 }
-                
+
                 // Set selected website
                 if (config.selectedWebsite) {
                     console.log('🎯 User selected website:', config.selectedWebsite.displayName || config.selectedWebsite.fileName);
@@ -1063,15 +1063,15 @@ class ChatBot {
                     console.log('⚠️ No websites available');
                     this.showNoSitesMessage();
                 }
-                
+
                 // Apply theme styles
                 this.createStyles();
-                
+
             } else {
                 console.error('❌ Failed to load SDK configuration');
                 this.showNoSitesMessage();
             }
-            
+
         } catch (error) {
             console.error('❌ Error loading SDK configuration:', error);
             this.showNoSitesMessage();
@@ -1083,54 +1083,54 @@ class ChatBot {
         // If website theme is loaded and available, use it
         if (this.options.themeStyle === 'website' && this.websiteTheme && this.websiteTheme.colors) {
             console.log('🎨 Applying website theme colors:', this.websiteTheme.colors);
-            
+
             const colors = this.websiteTheme.colors;
-            
+
             // Validate that we have a meaningful primary color
             const hasValidPrimary = colors.primary && this.isWebsiteSpecificColor(colors.primary);
-            
+
             if (!hasValidPrimary) {
                 console.warn('⚠️ Website theme has invalid primary color, falling back to default');
                 return this.getDefaultThemeColors();
             }
-            
+
             // Build comprehensive theme from extracted colors
             const themeColors = {
                 // Primary colors from website
                 primary: colors.primary,
                 primaryDark: this.darkenColor(colors.primary, 20),
                 primaryLight: this.lightenColor(colors.primary, 20),
-                
+
                 // Secondary colors - use extracted or derive from primary
                 secondary: colors.secondary || this.adjustColorBrightness(colors.primary, -15),
-                
+
                 // Background and text colors
                 background: colors.background || '#ffffff',
                 text: colors.text || this.getContrastingTextColor(colors.background || '#ffffff'),
-                
+
                 // UI element colors
                 border: colors.border || this.adjustColorBrightness(colors.background || '#ffffff', -8),
                 button: colors.button || colors.primary,
                 link: colors.link || colors.primary,
                 accent: colors.accent || colors.primary,
-                
+
                 // Chat-specific colors
                 userBg: colors.primary,
                 botBg: this.generateBotBackgroundColor(colors),
                 headerBg: colors.primary,
                 headerText: this.getContrastingTextColor(colors.primary)
             };
-            
+
             console.log('🎯 Generated theme colors:', themeColors);
-            
+
             // Apply accessibility enhancements
             return this.ensureAccessibleColors(themeColors);
         }
-        
+
         // Default theme colors
         return this.getDefaultThemeColors();
     }
-    
+
     getDefaultThemeColors() {
         console.log('🎨 Using default theme colors');
         return {
@@ -1150,12 +1150,12 @@ class ChatBot {
             headerText: '#ffffff'
         };
     }
-    
+
     isWebsiteSpecificColor(color) {
         if (!color) return false;
-        
+
         const normalizedColor = color.toLowerCase().trim();
-        
+
         // List of generic/default colors that shouldn't be used as brand colors
         const genericColors = [
             '#ffffff', '#fff', 'white',
@@ -1170,63 +1170,63 @@ class ChatBot {
             '#17a2b8', '#6c757d', '#343a40', // Bootstrap grays
             '#667eea', '#764ba2' // Common gradient colors
         ];
-        
+
         // Check if it's a generic color
         if (genericColors.includes(normalizedColor)) {
             return false;
         }
-        
+
         // Check if it's too light or too dark
         if (this.isColorTooLight(normalizedColor) || this.isColorTooDark(normalizedColor)) {
             return false;
         }
-        
+
         // Check if it has sufficient saturation (not grayscale)
         return this.hasGoodSaturation(normalizedColor);
     }
-    
+
     isColorTooLight(color) {
         const hex = color.replace('#', '');
         if (hex.length !== 6) return false;
-        
+
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
-        
+
         // Calculate luminance
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         return luminance > 0.9; // Too light if luminance > 90%
     }
-    
+
     isColorTooDark(color) {
         const hex = color.replace('#', '');
         if (hex.length !== 6) return false;
-        
+
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
-        
+
         // Calculate luminance
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         return luminance < 0.1; // Too dark if luminance < 10%
     }
-    
+
     hasGoodSaturation(color) {
         const hex = color.replace('#', '');
         if (hex.length !== 6) return false;
-        
+
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
-        
+
         // Calculate saturation
         const max = Math.max(r, g, b);
         const min = Math.min(r, g, b);
         const saturation = max === 0 ? 0 : (max - min) / max;
-        
+
         return saturation > 0.15; // Good saturation if > 15%
     }
-    
+
     generateBotBackgroundColor(colors) {
         // Create a subtle bot background based on the website's colors
         if (colors.secondary && colors.secondary !== colors.primary) {
@@ -1238,7 +1238,7 @@ class ChatBot {
         }
         return '#f1f3f5'; // Default light gray
     }
-    
+
     getContrastingTextColor(backgroundColor) {
         // Determine if white or dark text should be used on the background
         return this.isLightColor(backgroundColor) ? '#ffffff' : '#2d3748';
@@ -1252,25 +1252,25 @@ class ChatBot {
         } else if (this.isDarkColor(colors.background) && this.isDarkColor(colors.text)) {
             colors.text = '#f7fafc'; // Light text for dark background
         }
-        
+
         // Ensure bot background has sufficient contrast with text
         if (this.isLightColor(colors.botBg) && this.isLightColor(colors.text)) {
             colors.botBg = '#f8f9fa'; // Light gray for better contrast
         } else if (this.isDarkColor(colors.botBg) && this.isDarkColor(colors.text)) {
             colors.botBg = '#e2e8f0'; // Light gray for better contrast
         }
-        
+
         // Ensure primary color is not too similar to background
         if (this.isColorTooSimilar(colors.primary, colors.background)) {
             colors.primary = this.isLightColor(colors.background) ? '#4299e1' : '#63b3ed';
         }
-        
+
         return colors;
     }
 
     isLightColor(color) {
         if (!color || color === 'transparent') return true;
-        
+
         // Simple brightness check based on hex color
         if (color.startsWith('#')) {
             const hex = color.slice(1);
@@ -1280,7 +1280,7 @@ class ChatBot {
             const brightness = (r * 299 + g * 587 + b * 114) / 1000;
             return brightness > 155;
         }
-        
+
         return true; // Default to light if can't determine
     }
 
@@ -1293,18 +1293,18 @@ class ChatBot {
         if (!color1 || !color2 || !color1.startsWith('#') || !color2.startsWith('#')) {
             return false;
         }
-        
+
         const hex1 = color1.slice(1);
         const hex2 = color2.slice(1);
-        
+
         const r1 = parseInt(hex1.substr(0, 2), 16);
         const g1 = parseInt(hex1.substr(2, 2), 16);
         const b1 = parseInt(hex1.substr(4, 2), 16);
-        
+
         const r2 = parseInt(hex2.substr(0, 2), 16);
         const g2 = parseInt(hex2.substr(2, 2), 16);
         const b2 = parseInt(hex2.substr(4, 2), 16);
-        
+
         const distance = Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2));
         return distance < 100; // Colors are too similar if distance is less than 100
     }
@@ -1312,16 +1312,16 @@ class ChatBot {
     async autoDetectAndLoadTheme(fileId) {
         try {
             console.log('🔄 Auto-detecting and loading theme for fileId:', fileId);
-            
+
             // Only attempt theme loading if themeStyle is set to 'website' or 'auto'
             if (this.options.themeStyle === 'default') {
                 console.log('🎯 Theme style is set to default, skipping auto-detection');
                 return false;
             }
-            
+
             // Attempt to load website theme
             const themeLoaded = await this.loadWebsiteTheme(fileId);
-            
+
             if (themeLoaded) {
                 console.log('✅ Website theme auto-detected and applied successfully');
                 this.options.themeStyle = 'website'; // Update to reflect successful theme loading
@@ -1346,7 +1346,7 @@ class ChatBot {
         try {
             console.log('🌐 Fetching theme data from API for fileId:', fileId);
             console.log('🔗 API URL:', `${this.baseUrl}/theme/${fileId}`);
-            
+
             // Add cache-busting timestamp for fresh theme data
             const timestamp = new Date().getTime();
             const response = await fetch(`${this.baseUrl}/theme/${fileId}?t=${timestamp}`, {
@@ -1358,7 +1358,7 @@ class ChatBot {
             });
 
             console.log('📡 API Response status:', response.status);
-            
+
             const data = await response.json();
             console.log('📊 API Response data:', data);
 
@@ -1367,7 +1367,7 @@ class ChatBot {
                 this.websiteTheme = data.data;
                 console.log('✅ Website theme loaded successfully:', this.websiteTheme);
                 console.log('🎨 Extracted colors:', this.websiteTheme.colors);
-                
+
                 // Re-apply styles with new theme
                 this.createStyles();
                 return true;
@@ -1381,150 +1381,52 @@ class ChatBot {
             return false;
         }
     }
-    
-    // Ensure primary color is not too similar to background
-    if (this.isColorTooSimilar(colors.primary, colors.background)) {
-        colors.primary = this.isLightColor(colors.background) ? '#4299e1' : '#63b3ed';
-    }
-    
-    return colors;
-}
 
-isLightColor(color) {
-    if (!color || color === 'transparent') return true;
-    
-    // Simple brightness check based on hex color
-    if (color.startsWith('#')) {
+    darkenColor(color, percent) {
+        if (!color || !color.startsWith('#')) return color;
+
         const hex = color.slice(1);
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-        return brightness > 155;
-    }
-    
-    return true; // Default to light if can't determine
-}
 
-isDarkColor(color) {
-    return !this.isLightColor(color);
-}
-
-isColorTooSimilar(color1, color2) {
-    // Simple similarity check - in production, you'd use more sophisticated color difference algorithms
-    if (!color1 || !color2 || !color1.startsWith('#') || !color2.startsWith('#')) {
-        return false;
-    }
-    
-    const hex1 = color1.slice(1);
-    const hex2 = color2.slice(1);
-    
-    const r1 = parseInt(hex1.substr(0, 2), 16);
-    const g1 = parseInt(hex1.substr(2, 2), 16);
-    const b1 = parseInt(hex1.substr(4, 2), 16);
-    
-    const r2 = parseInt(hex2.substr(0, 2), 16);
-    const g2 = parseInt(hex2.substr(2, 2), 16);
-    const b2 = parseInt(hex2.substr(4, 2), 16);
-    
-    const distance = Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2));
-    return distance < 100; // Colors are too similar if distance is less than 100
-}
-
-async autoDetectAndLoadTheme(fileId) {
-    try {
-        console.log('🔄 Auto-detecting and loading theme for fileId:', fileId);
-        
-        // Only attempt theme loading if themeStyle is set to 'website' or 'auto'
-        if (this.options.themeStyle === 'default') {
-            console.log('🎯 Theme style is set to default, skipping auto-detection');
-            return false;
-        }
-        
-        // Attempt to load website theme
-        const themeLoaded = await this.loadWebsiteTheme(fileId);
-        
-        if (themeLoaded) {
-            console.log('✅ Website theme auto-detected and applied successfully');
-            this.options.themeStyle = 'website'; // Update to reflect successful theme loading
-            return true;
-        } else {
-            console.log('⚠️ Website theme auto-detection failed, falling back to default');
-            this.options.themeStyle = 'default'; // Fallback to default
-            this.websiteTheme = null;
-            this.createStyles(); // Re-apply styles with default theme
-            return false;
-        }
-    } catch (error) {
-        console.error('❌ Error in auto-detect theme:', error);
-        this.options.themeStyle = 'default';
-        this.websiteTheme = null;
-        this.createStyles();
-        return false;
-    }
-}
-
-async loadWebsiteTheme(fileId) {
-    try {
-        console.log('🌐 Fetching theme data from API for fileId:', fileId);
-        console.log('🔗 API URL:', `${this.baseUrl}/theme/${fileId}`);
-        
-        // Add cache-busting timestamp for fresh theme data
-        const timestamp = new Date().getTime();
-        const response = await fetch(`${this.baseUrl}/theme/${fileId}?t=${timestamp}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': this.apiKey
-            }
-        });
-
-        console.log('📡 API Response status:', response.status);
-        
-        const data = await response.json();
-        console.log('📊 API Response data:', data);
-        const hex = color.slice(1);
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
-        
         const factor = (100 - percent) / 100;
         const newR = Math.round(r * factor);
         const newG = Math.round(g * factor);
         const newB = Math.round(b * factor);
-        
+
         return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
-    
+
     lightenColor(color, percent) {
         if (!color || !color.startsWith('#')) return color;
-        
+
         const hex = color.slice(1);
         const r = parseInt(hex.substr(0, 2), 16);
         const g = parseInt(hex.substr(2, 2), 16);
         const b = parseInt(hex.substr(4, 2), 16);
-        
+
         const factor = percent / 100;
         const newR = Math.round(r + (255 - r) * factor);
         const newG = Math.round(g + (255 - g) * factor);
         const newB = Math.round(b + (255 - b) * factor);
-        
+
         return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
     }
-    
+
     adjustColorBrightness(hex, percent) {
         if (!hex || !hex.startsWith('#')) return hex;
-        
+
         // Remove # if present
         hex = hex.replace('#', '');
-        
+
         // Parse r, g, b values
         const num = parseInt(hex, 16);
         const amt = Math.round(2.55 * percent);
         const R = (num >> 16) + amt;
         const G = (num >> 8 & 0x00FF) + amt;
         const B = (num & 0x0000FF) + amt;
-        
+
         return '#' + (0x1000000 + (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
             (G < 255 ? (G < 1 ? 0 : G) : 255) * 0x100 +
             (B < 255 ? (B < 1 ? 0 : B) : 255)).toString(16).slice(1);
