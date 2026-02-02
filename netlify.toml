@@ -1,0 +1,39 @@
+# Netlify Configuration for ChatBot SDK
+[build]
+  # Publish the dist directory
+  publish = "dist"
+  
+  # Build command to ensure SDK is built
+  command = "npm run build"
+
+# Set custom headers for CORS (allow SDK to be used on any website)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type"
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Redirect root to the minified SDK file
+[[redirects]]
+  from = "/"
+  to = "/chatbot-sdk.min.js"
+  status = 200
+  force = false
+
+# Ensure all SDK files are accessible
+[[redirects]]
+  from = "/chatbot-sdk.js"
+  to = "/chatbot-sdk.js"
+  status = 200
+
+[[redirects]]
+  from = "/chatbot-sdk.min.js"
+  to = "/chatbot-sdk.min.js"
+  status = 200
+
+[[redirects]]
+  from = "/chatbot-sdk.esm.js"
+  to = "/chatbot-sdk.esm.js"
+  status = 200
