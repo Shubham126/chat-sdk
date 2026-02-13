@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatFlow AI - New Gradient Design Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            background: white;
+            padding: 60px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+        }
+
+        p {
+            font-size: 18px;
+            color: #2d3748;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .feature {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+        }
+
+        .feature h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .feature p {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .note {
+            margin-top: 40px;
+            padding: 20px;
+            background: #e3f2fd;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .note strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎨 ChatFlow AI</h1>
+        <p>
+            Welcome to the new gradient design! Click the chat button in the bottom-right corner to see the beautiful
+            new styling.
+        </p>
+
+        <div class="features">
+            <div class="feature">
+                <h3>✨ Modern Gradients</h3>
+                <p>Beautiful purple gradient (#667eea to #764ba2) throughout the UI</p>
+            </div>
+            <div class="feature">
+                <h3>🎭 Smooth Animations</h3>
+                <p>Slide-up animations and hover effects for premium feel</p>
+            </div>
+            <div class="feature">
+                <h3>💎 Premium Design</h3>
+                <p>Clean, modern interface with glassmorphism effects</p>
+            </div>
+            <div class="feature">
+                <h3>📱 Responsive</h3>
+                <p>Works perfectly on all devices and screen sizes</p>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>🚀 Integration:</strong> This chatbot is integrated with just a single script tag! No additional CSS
+            or configuration needed. The beautiful gradient design is now the default look.
+        </div>
+    </div>
+
+    <!-- ChatFlow AI SDK Integration -->
+    <script src="./dist/chatbot-sdk.esm.js"
+        data-api-key="wk_b74bbb6da5ef57cbfe04372468a920da9211deb7d781c8fc8e5ce3d654be9164"
+        data-base-url="https://chat-backend-12wo.onrender.com/api/scrape">
+        </script>
+</body>
+
+</html>
