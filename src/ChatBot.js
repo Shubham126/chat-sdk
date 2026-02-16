@@ -864,13 +864,13 @@ class ChatBot {
         let formattedText = text
             // Remove excessive whitespace and line breaks
             .replace(/\n\s*\n\s*\n/g, '\n\n')
-            // Format headers (process before bold to avoid conflicts)
+            // Format bold text FIRST (before any other formatting)
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            // Format headers (process after bold to allow bold in headers)
             .replace(/^## (.+)$/gm, '<div class="bot-header">$1</div>')
             .replace(/^# (.+)$/gm, '<div class="bot-title">$1</div>')
-            // Format bold text (process before bullet points to avoid ** being caught as bullets)
-            .replace(/\*\*([^*]+?)\*\*/g, '<strong>$1</strong>')
-            // Format bullet points (only match single * at start of line)
-            .replace(/^\* (.+)$/gm, '<div class="bot-bullet">• $1</div>')
+            // Format bullet points (only match single * at start of line, not **)
+            .replace(/^(?!\*)\* (.+)$/gm, '<div class="bot-bullet">• $1</div>')
             // Format numbered lists
             .replace(/^(\d+)\. (.+)$/gm, '<div class="bot-numbered">$1. $2</div>')
             // Convert line breaks to proper spacing
